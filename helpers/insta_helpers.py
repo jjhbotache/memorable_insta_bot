@@ -1,5 +1,3 @@
-from requests import get as get_page
-from bs4 import BeautifulSoup
 from selenium import webdriver
 
 from config import DEBUG

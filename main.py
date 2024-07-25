@@ -1,10 +1,13 @@
-from helpers.insta_helpers import get_data_from_insta_user
-from helpers.data_parser import user_data_to_potential_buyer
+from classes.insta_bot import Bot
 
 
-user = input("Enter a username to analyse: ")
-user_data = get_data_from_insta_user(user)
-user_data_to_potential_buyer(user_data)
+
+
+bot = Bot()
+bot.check_instagram()
+input("done")
+bot.bot_quit()
+
 
 
 
