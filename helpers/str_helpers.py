@@ -16,5 +16,4 @@ def trim_json_str(json_str):
     # Corta y devuelve la subcadena desde '{' hasta '}'
     
     json = json_str[start:end+1]
-    print(json)
     return str(json)

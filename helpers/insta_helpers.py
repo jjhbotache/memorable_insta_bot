@@ -1,6 +1,6 @@
 from selenium import webdriver
 
-from config import DEBUG
+from helpers.config import DEBUG
 
 def get_data_from_insta_user(username):
   if DEBUG:
