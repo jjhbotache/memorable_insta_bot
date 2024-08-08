@@ -1,3 +1,6 @@
+import random
+
+
 def trim_json_str(json_str):
     # Encuentra la primera ocurrencia de '{'
     start = json_str.find('{')
@@ -17,3 +20,8 @@ def trim_json_str(json_str):
     
     json = json_str[start:end+1]
     return str(json)
+
+def get_random_syllable():
+    vowels = "aeiou"
+    consonants = "bcdfghjklmnpqrstvwxyz"
+    return random.choice(consonants) + random.choice(vowels)

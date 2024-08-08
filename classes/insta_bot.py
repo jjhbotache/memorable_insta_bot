@@ -7,6 +7,8 @@ from helpers.data_parser import local_url_img_to_description, url_img_to_descrip
 import time
 import threading
 
+from helpers.str_helpers import get_random_syllable
+
 perfil_path = "/home/juan/.config/microsoft-edge/Default"
 
 
@@ -41,6 +43,12 @@ class Bot():
       Returns:
       None
       """
+      def get_mid_points(self):
+        window_size = self.driver.get_window_size()
+        center_x = window_size['width'] / 2
+        center_y = window_size['height'] / 2
+        return center_x,center_y
+      
       self.stop_thread = False
       if segs > 0:
         timer_thread = threading.Timer(segs, self.stop_execution)
@@ -58,7 +66,7 @@ class Bot():
           try:
 
             print("getting element at center")
-            center_x, center_y = self.get_mid_points()
+            center_x, center_y = get_mid_points()
             element_at_center: WebElement = self.driver.execute_script("return document.elementFromPoint(arguments[0], arguments[1]).parentNode;", center_x, center_y)
             el_url = "element_at_center.png"
             element_at_center.screenshot(el_url)
@@ -99,12 +107,25 @@ class Bot():
       print("ended")
       timer_thread.join()
 
-  def get_mid_points(self):
-      window_size = self.driver.get_window_size()
-      center_x = window_size['width'] / 2
-      center_y = window_size['height'] / 2
-      return center_x,center_y
+  def follow_random_users_from_page(self, page, amount_to_follow):
+    """ Follow a random amount of users from a page.
 
+    Args:
+        page (_type_): _description_
+        amount_to_follow (_type_): _description_
+    """
+    
+    self.driver.get(f"https://www.instagram.com/{page}/followers/")
+    self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[3]/ul/li[2]/div/a').click()
+    search_box = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[2]/div/input')
+    search_box.send_keys(get_random_syllable())
+    time.sleep(2)
+    followers_divs = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]')\
+      .find_elements("css selector", "div")
+    
+    print(f"followers: {len(followers_divs)}")
+    input("Press enter to continue...")
+    
 
   def bot_quit(self):
     """
