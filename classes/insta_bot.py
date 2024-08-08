@@ -5,6 +5,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from helpers.insta_helpers import get_data_from_insta_user
 from helpers.data_parser import local_url_img_to_description, url_img_to_description, user_data_to_potential_buyer, would_person_be_interested
+from helpers.config import DEBUG
 
 import time
 import threading
@@ -45,7 +46,7 @@ class Bot():
       Returns:
       None
       """
-      def get_mid_points(self):
+      def get_mid_points():
         window_size = self.driver.get_window_size()
         center_x = window_size['width'] / 2
         center_y = window_size['height'] / 2
@@ -103,7 +104,7 @@ class Bot():
             time.sleep(1)
             
           except Exception as e:
-              print(f"Error: {str(e)}")
+              if DEBUG:print(f"Error while getting element at center: {str(e)}")
               continue
       
       print("ended")
@@ -135,13 +136,12 @@ class Bot():
       try:
         # get the followers divs
         try:                                                      
-          try:
-            followers_container = self.driver.find_element("xpath", '/html/body/div[7]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
-          except:
-            followers_container = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
+          try: followers_container = self.driver.find_element("xpath", '/html/body/div[7]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
+          except: followers_container = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
+          
           followers_divs = followers_container.find_elements("xpath", "./div")
         except Exception as e:
-          print("No followers found: ", str(e[:300]))
+          print("No followers found: ", str(e[:300] if len(str(e))>300 else str(e)))
           type_random_syllable()
           continue
           
@@ -157,7 +157,6 @@ class Bot():
           followers_data.append(follower_data)
         
         for follower in followers_data:
-          print(f"attemping to follow {follower['username']}")
           followed = self.attemp_to_follow_user(follower["username"])
           if followed:
             already_followed += 1
@@ -165,28 +164,43 @@ class Bot():
           
         
       except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error in follow_random_users_from_page : {str(e)}")
+        time.sleep(2)
         continue
-      
-    print(*followers_data,sep="\n")
-
+    return already_followed
+    
   def attemp_to_follow_user(self,username):
+    print(f"Checking if user {username} is a potential buyer...",end="\n")
     user_info = get_data_from_insta_user(username)
     if user_info is None: return False
     
     analyse = user_data_to_potential_buyer(user_info)
-    print(f"Analyse result: {analyse}")
-    {'is_possible_to_buy': False, 'reason': "The provided user data does not include any information about age, social life, or interest in wine. Therefore, it's not possible to determine if this user is a potential buyer of custom-designed wine bottles."}
+    print(f"Analyse result:")
+    print("Would person be interested: ", "yes" if analyse["is_possible_to_buy"] == True else "no")
+    print("Reason: ", analyse["reason"] if len(analyse["reason"])<80 else analyse["reason"][:80]+"...")
+    
+    # {'is_possible_to_buy': False, 'reason': "The provided user data does not include any information about age, social life, or interest in wine. Therefore, it's not possible to determine if this user is a potential buyer of custom-designed wine bottles."}
     
     if analyse["is_possible_to_buy"]:
+      print(f"following",end="\n")
       self.driver.get(f"https://www.instagram.com/{username}/")
-      follow_button = self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section/div[1]/div/div/div/button')
+      follow_button = None
+      for _ in range(3):
+        try:                                                            
+              try:    follow_button = self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section/div[1]/div/div/div/button')
+              except: follow_button = self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[2]/div/div/div[2]/div/div[1]/button')
+              break
+        except Exception as e:
+          print(f"Error while finding follow button: {str(e)}")
+          time.sleep(2)
+          continue
       if "follow" in follow_button.text.lower():
         follow_button.click()
         return True
     else:
-      print(f"User {username} is not a potential buyer: {analyse['reason']}")
+      print(f"User {username} is not a potential buyer, skipping...",end="\n")
       return False
+    
     
 
   def bot_quit(self):

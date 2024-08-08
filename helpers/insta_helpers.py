@@ -27,8 +27,9 @@ def get_data_from_insta_user(username):
       print(f"Getting data from Instagram user: {username}")
     # haedless driver
     edge_options = webdriver.EdgeOptions()
-    edge_options.add_argument("--headless")
-    edge_options.add_argument("--disable-gpu")
+    # edge_options.add_argument("--headless")
+    # edge_options.add_argument("--disable-gpu")
+    edge_options.add_argument("--log-level=3")
     
     driver = webdriver.Edge(options=edge_options)
     driver.implicitly_wait(10)
@@ -38,8 +39,9 @@ def get_data_from_insta_user(username):
     
                                                                     
     for _ in range(3):
-      try:
-        user_info_to_return["username"] = driver.find_element("xpath",'/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section/div[1]/div').text
+      try:                                                                      
+        try: user_info_to_return["username"] = driver.find_element("xpath",'/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section/div[1]/div').text
+        except: user_info_to_return["username"] = driver.find_element("xpath",'/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[2]/div/div/div[1]/div/a/h2/span').text
         break
       except:
         user_info_to_return["username"] = None
@@ -62,13 +64,10 @@ def get_data_from_insta_user(username):
     user_info_to_return["profile_picture"] = user_info_to_return["imgs"][0] ; user_info_to_return["imgs"].pop(0)
 
     
-    if DEBUG:
-      print("profile info gotten")
-      print(user_info_to_return)
     return user_info_to_return
   
   except Exception as e:
-    print(f"Error: {str(e)[:300]}")
+    print(f"Error in get_data_from_insta_user: {str(e)[:300]}")
     input("Press enter to continue")
     return None
   
