@@ -2,8 +2,10 @@ import random
 from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 from helpers.insta_helpers import get_data_from_insta_user
 from helpers.data_parser import local_url_img_to_description, url_img_to_description, user_data_to_potential_buyer, would_person_be_interested
+
 import time
 import threading
 
@@ -107,7 +109,7 @@ class Bot():
       print("ended")
       timer_thread.join()
 
-  def follow_random_users_from_page(self, page, amount_to_follow):
+  def follow_random_users_from_page(self, page, amount_to_follow=10):
     """ Follow a random amount of users from a page.
 
     Args:
@@ -117,14 +119,74 @@ class Bot():
     
     self.driver.get(f"https://www.instagram.com/{page}/followers/")
     self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[3]/ul/li[2]/div/a').click()
-    search_box = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[2]/div/input')
-    search_box.send_keys(get_random_syllable())
-    time.sleep(2)
-    followers_divs = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]')\
-      .find_elements("css selector", "div")
+    time.sleep(4)
     
-    print(f"followers: {len(followers_divs)}")
-    input("Press enter to continue...")
+    def type_random_syllable():
+      self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys("-")      
+      self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(Keys.ESCAPE)      
+      self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(get_random_syllable())      
+      time.sleep(2)
+    
+    type_random_syllable()
+    
+    already_followed = 0
+    followers_data = []
+    while already_followed < amount_to_follow:
+      try:
+        # get the followers divs
+        try:                                                      
+          try:
+            followers_container = self.driver.find_element("xpath", '/html/body/div[7]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
+          except:
+            followers_container = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
+          followers_divs = followers_container.find_elements("xpath", "./div")
+        except Exception as e:
+          print("No followers found: ", str(e[:300]))
+          type_random_syllable()
+          continue
+          
+        # parse the followers data
+        followers_data = []
+        for d in followers_divs:
+          username = d.text.split("\n")[0]
+          followed = not ("follow" in d.text.split("\n")[2].lower())
+          follower_data = {
+            "username": username,
+            "followed": followed
+          }
+          followers_data.append(follower_data)
+        
+        for follower in followers_data:
+          print(f"attemping to follow {follower['username']}")
+          followed = self.attemp_to_follow_user(follower["username"])
+          if followed:
+            already_followed += 1
+          
+          
+        
+      except Exception as e:
+        print(f"Error: {str(e)}")
+        continue
+      
+    print(*followers_data,sep="\n")
+
+  def attemp_to_follow_user(self,username):
+    user_info = get_data_from_insta_user(username)
+    if user_info is None: return False
+    
+    analyse = user_data_to_potential_buyer(user_info)
+    print(f"Analyse result: {analyse}")
+    {'is_possible_to_buy': False, 'reason': "The provided user data does not include any information about age, social life, or interest in wine. Therefore, it's not possible to determine if this user is a potential buyer of custom-designed wine bottles."}
+    
+    if analyse["is_possible_to_buy"]:
+      self.driver.get(f"https://www.instagram.com/{username}/")
+      follow_button = self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section/div[1]/div/div/div/button')
+      if "follow" in follow_button.text.lower():
+        follow_button.click()
+        return True
+    else:
+      print(f"User {username} is not a potential buyer: {analyse['reason']}")
+      return False
     
 
   def bot_quit(self):

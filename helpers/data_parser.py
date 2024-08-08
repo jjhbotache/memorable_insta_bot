@@ -43,8 +43,9 @@ def user_data_to_potential_buyer(user_data):
     url_imgs_to_get_descriptions = []
 
     print("Chosing random imgs to analyse . . .")
+    
     while len(url_imgs_to_get_descriptions) < imgs_to_choose:
-        random_img_url = user_data['imgs'][:20][random.randint(0, len(user_data['imgs']) - 1)]
+        random_img_url = user_data['imgs'][:20][random.randint(0, len(user_data['imgs'][:20]) - 1)]
         if random_img_url not in url_imgs_to_get_descriptions:
             url_imgs_to_get_descriptions.append(random_img_url)
 
