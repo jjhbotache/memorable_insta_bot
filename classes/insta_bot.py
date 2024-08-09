@@ -11,6 +11,7 @@ import time
 import threading
 
 from helpers.str_helpers import get_random_syllable
+from helpers.webdriver_helpers import find_first_element_from_elements
 
 perfil_path = "/home/juan/.config/microsoft-edge/Default"
 
@@ -30,7 +31,7 @@ class Bot():
     edge_options.add_argument(f"user-data-dir={perfil_path}")
     # edge_options.add_argument(f"--headless")
     self.driver = webdriver.Edge(options=edge_options)
-    self.driver.implicitly_wait(10)
+    self.driver.implicitly_wait(3)
     self.actions = ActionChains(self.driver)  
     
   def stop_execution(self):
@@ -68,7 +69,6 @@ class Bot():
 
           try:
 
-            print("getting element at center")
             center_x, center_y = get_mid_points()
             element_at_center: WebElement = self.driver.execute_script("return document.elementFromPoint(arguments[0], arguments[1]).parentNode;", center_x, center_y)
             el_url = "element_at_center.png"
@@ -80,7 +80,7 @@ class Bot():
               description = local_url_img_to_description(el_url)
               info = would_person_be_interested(description)
               if info["interested"]:
-                print(f"Person interested: {info['reason']} \n")
+                print(f"Person interested: {info['reason']} \n🤩\n")
                 self.actions.double_click(element_at_center).perform()
                 img = len(element_at_center.find_elements("css selector", "img")) > 0
                 video = len(element_at_center.find_elements("css selector", "video")) > 0
@@ -96,9 +96,9 @@ class Bot():
                 
                 print("double clicked")
               else:
-                print("not interested")
+                print("not interested 🥱")
             else:
-              print("no media")
+              print("no media ❓")
                 
             self.driver.execute_script("window.scrollBy({top: 870,behavior: 'smooth'});")
             time.sleep(1)
@@ -107,10 +107,10 @@ class Bot():
               if DEBUG:print(f"Error while getting element at center: {str(e)}")
               continue
       
-      print("ended")
+      print("ended", end="\n\n")
       timer_thread.join()
 
-  def follow_random_users_from_page(self, page, amount_to_follow=10):
+  def follow_random_users_from_page(self, page, amount_to_follow):
     """ Follow a random amount of users from a page.
 
     Args:
@@ -118,9 +118,18 @@ class Bot():
         amount_to_follow (_type_): _description_
     """
     
-    self.driver.get(f"https://www.instagram.com/{page}/followers/")
-    self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[3]/ul/li[2]/div/a').click()
-    time.sleep(4)
+    
+    def get_followers_window():
+      for _ in range(3):
+        try:
+          self.driver.get(f"https://www.instagram.com/{page}/followers/")
+          self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[3]/ul/li[2]/div/a').click()
+          time.sleep(4)
+          break
+        except Exception as e:
+          print(f"Error while getting followers window: {str(e)}")
+          time.sleep(2)
+          continue
     
     def type_random_syllable():
       self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys("-")      
@@ -128,16 +137,23 @@ class Bot():
       self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(get_random_syllable())      
       time.sleep(2)
     
-    type_random_syllable()
+    
     
     already_followed = 0
     followers_data = []
     while already_followed < amount_to_follow:
+      get_followers_window()
+      type_random_syllable()
       try:
         # get the followers divs
-        try:                                                      
-          try: followers_container = self.driver.find_element("xpath", '/html/body/div[7]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
-          except: followers_container = self.driver.find_element("xpath", '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div')
+        try:
+          try:
+            followers_container = find_first_element_from_elements(self.driver, [
+              '/html/body/div[7]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div',
+              '/html/body/div[6]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div'
+            ])
+          except:
+            followers_container = None
           
           followers_divs = followers_container.find_elements("xpath", "./div")
         except Exception as e:
@@ -157,32 +173,38 @@ class Bot():
           followers_data.append(follower_data)
         
         for follower in followers_data:
+          if already_followed >= amount_to_follow:
+            break
           followed = self.attemp_to_follow_user(follower["username"])
           if followed:
+            print("\n")
             already_followed += 1
           
           
         
       except Exception as e:
         print(f"Error in follow_random_users_from_page : {str(e)}")
+        type_random_syllable()
         time.sleep(2)
         continue
+      
     return already_followed
     
   def attemp_to_follow_user(self,username):
     print(f"Checking if user {username} is a potential buyer...",end="\n")
-    user_info = get_data_from_insta_user(username)
+    user_info = get_data_from_insta_user(username,self.driver)
     if user_info is None: return False
     
     analyse = user_data_to_potential_buyer(user_info)
     print(f"Analyse result:")
     print("Would person be interested: ", "yes" if analyse["is_possible_to_buy"] == True else "no")
-    print("Reason: ", analyse["reason"] if len(analyse["reason"])<80 else analyse["reason"][:80]+"...")
+    reason_limit = 400
+    print("Reason: ", analyse["reason"] if len(analyse["reason"])<reason_limit else analyse["reason"][:reason_limit]+"...")
     
     # {'is_possible_to_buy': False, 'reason': "The provided user data does not include any information about age, social life, or interest in wine. Therefore, it's not possible to determine if this user is a potential buyer of custom-designed wine bottles."}
     
     if analyse["is_possible_to_buy"]:
-      print(f"following",end="\n")
+      print(f"following ",end="")
       self.driver.get(f"https://www.instagram.com/{username}/")
       follow_button = None
       for _ in range(3):
@@ -196,9 +218,11 @@ class Bot():
           continue
       if "follow" in follow_button.text.lower():
         follow_button.click()
+        print(f"✅",end="")
+        time.sleep(2)
         return True
     else:
-      print(f"User {username} is not a potential buyer, skipping...",end="\n")
+      print(f"User {username} is not a potential buyer, skipping... ❌",end="\n\n")
       return False
     
     
