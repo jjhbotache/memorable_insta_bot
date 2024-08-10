@@ -33,8 +33,10 @@ shudown = "y" == input("Do you want to shutdown the pc after the bot finishes? (
 bot = Bot()
 followed = 0
 while followed < amount_to_follow:
+  remaining_follows = amount_to_follow-followed
+  print(f"{remaining_follows} missing to follow")
   choosed_page = random.choice(target_pages)
-  random_amount = random.randint(3, 8) if amount_to_follow-followed > 8 else amount_to_follow-followed
+  random_amount = random.randint(3, 8) if remaining_follows > 8 else random.randint(1, remaining_follows)
   print(f"Following {random_amount} users from {choosed_page}")
   followed += bot.follow_random_users_from_page(choosed_page, random_amount)
   if followed >= amount_to_follow: break

@@ -132,10 +132,17 @@ class Bot():
           continue
     
     def type_random_syllable():
-      self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys("-")      
-      self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(Keys.ESCAPE)      
-      self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(get_random_syllable())      
-      time.sleep(2)
+      for _ in range(3):
+        try:
+          self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys("-")      
+          self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(Keys.ESCAPE)      
+          self.driver.find_element("css selector", 'input[aria-label="Search input"]').send_keys(get_random_syllable())      
+          time.sleep(2)
+        except Exception as e:
+          print(f"Error while typing random syllable: {str(e)}")
+          get_followers_window()
+          time.sleep(2)
+          continue
     
     
     
