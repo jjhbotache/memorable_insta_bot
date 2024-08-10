@@ -17,9 +17,12 @@ This is a very interesting project, as it is a bot that follows the followers of
 - **Pillow:** A Python Imaging Library (PIL) fork that adds image processing capabilities.
 - **Requests:** A simple HTTP library for making requests to web services.
 - **Google Generative AI:** Utilized for generating image descriptions.
+- **Selenium**: A powerful tool for automating web browsers, commonly used for web scraping and automated testing.
+
 
 ![Python](https://img.shields.io/badge/python-%233776AB.svg?style=for-the-badge&logo=python&logoColor=white)
 ![Pillow](https://img.shields.io/badge/pillow-%2300C7B7.svg?style=for-the-badge&logo=python&logoColor=white)
 ![Requests](https://img.shields.io/badge/requests-%23003B57.svg?style=for-the-badge&logo=python&logoColor=white)
 ![Google Generative AI](https://img.shields.io/badge/google%20generative%20ai-%231FA2F1.svg?style=for-the-badge&logo=google&logoColor=white)
 ![Google Cloud](https://img.shields.io/badge/GoogleCloud-%234285F4.svg?style=for-the-badge&logo=google-cloud&logoColor=white)
+![Selenium](https://img.shields.io/badge/-selenium-%43B02A?style=for-the-badge&logo=selenium&logoColor=white)
