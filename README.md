@@ -19,6 +19,12 @@ This is a very interesting project, as it is a bot that follows the followers of
 - **Google Generative AI:** Utilized for generating image descriptions.
 - **Selenium**: A powerful tool for automating web browsers, commonly used for web scraping and automated testing.
 
+## How to use
+- You need to have python installed
+- Run ``` pip install -r requirements.txt ```
+- Then setup the ```TARGET_PAGES.txt``` with the instagram pages names you what the bot choose to look for people to follow
+- Setup the .env with the ```GEMINI_API_KEY```
+
 
 ![Python](https://img.shields.io/badge/python-%233776AB.svg?style=for-the-badge&logo=python&logoColor=white)
 ![Pillow](https://img.shields.io/badge/pillow-%2300C7B7.svg?style=for-the-badge&logo=python&logoColor=white)

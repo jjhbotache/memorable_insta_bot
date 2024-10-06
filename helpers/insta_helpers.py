@@ -1,7 +1,6 @@
 import os
 import time
 from selenium import webdriver
-from instascrape import *
 import dotenv
 dotenv.load_dotenv()
 

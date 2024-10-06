@@ -29,9 +29,11 @@ class Bot():
     """
     edge_options = webdriver.EdgeOptions()
     edge_options.add_argument(f"user-data-dir={perfil_path}")
+    edge_options.add_argument("--log-level=3")
+    
     # edge_options.add_argument(f"--headless")
     self.driver = webdriver.Edge(options=edge_options)
-    self.driver.implicitly_wait(3)
+    self.driver.implicitly_wait(10)
     self.actions = ActionChains(self.driver)  
     
   def stop_execution(self):
@@ -130,6 +132,11 @@ class Bot():
           print(f"Error while getting followers window: {str(e)}")
           time.sleep(2)
           continue
+      else:
+        print("could not get followers window, Probably you havent logged in")
+        print("Please log in and press enter")
+        input()
+        get_followers_window()
     
     def type_random_syllable():
       for _ in range(3):
@@ -144,15 +151,12 @@ class Bot():
           time.sleep(2)
           continue
     
-    
-    
     already_followed = 0
     followers_data = []
     while already_followed < amount_to_follow:
       get_followers_window()
       type_random_syllable()
       try:
-        # get the followers divs
         try:
           try:
             followers_container = find_first_element_from_elements(self.driver, [
@@ -232,6 +236,78 @@ class Bot():
       print(f"User {username} is not a potential buyer, skipping... ❌",end="\n\n")
       return False
     
+  def unfollow_users(self, amount_to_unfollow, ):
+    """
+    Unfollow a random amount of users.
+
+    Parameters:
+    amount_to_unfollow (int): The amount of users to unfollow.
+
+    Returns:
+    None
+    """  
+    self.driver.get("https://www.instagram.com")    
+    # get the current user by xpath
+    
+    try:
+      # get when the page 
+      current_user_link = self.driver.find_element("xpath", '/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div[1]/section/main/div[1]/div[2]/div/div[1]/div/div/div/div/div/div[2]/div/div/div/a').get_attribute("href")
+    except:
+      current_user_link = self.driver.find_element("xpath", '/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[6]/div/span/div/a').get_attribute("href")
+    
+    self.driver.get(f"{current_user_link}following/")
+      
+    # get the following btn
+    # wait for the link /html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[3]/ul/li[3]/div/a
+    
+    link = self.driver.find_element("xpath", '/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[2]/div/div[1]/section/main/div/header/section[3]/ul/li[3]/div/a')
+    link.click()
+    
+    # start unfollowing
+    unfollowed = 0
+    while unfollowed < amount_to_unfollow:
+      
+      # get the unfollow btns
+      for _ in range(3):
+        try:
+          search_input = self.driver.find_element("xpath", '/html/body/div[7]/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div/input')
+          search_input.click()
+          search_input.send_keys("-")
+          search_input.send_keys(Keys.ESCAPE)
+          search_input.send_keys(get_random_syllable())
+          time.sleep(2)
+          break
+        except Exception as e:
+          time.sleep(2)
+          continue
+      
+      # Try 3 times or until at least 1 unfollow button is found
+      unfollow_btns = []
+      for _ in range(3):
+        try:
+          unfollow_btns = self.driver.execute_script("""return document.querySelectorAll("button[type='button']")""")[2:]
+          
+          if len(unfollow_btns) > 0:
+            break
+          
+        except Exception as e:
+          time.sleep(2)
+          continue
+      else:
+        continue
+      
+      # choose a random btn and click it
+      random_btn = random.choice([
+        btn for btn in unfollow_btns if btn.text.lower() in ["siguiendo","following"]
+      ])
+      random_btn.click()
+      # confirm
+      time.sleep(1)
+      self.driver.find_element("xpath", '/html/body/div[8]/div[1]/div/div[2]/div/div/div/div/div/div/button[1]').click()
+      print("unfollowed ✅")
+      unfollowed += 1
+      time.sleep(30)
+  
     
 
   def bot_quit(self):
